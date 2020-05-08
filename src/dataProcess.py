@@ -7,7 +7,7 @@ import json
 import copy
 
 LABEL_DICT = {'background': 0, 'normal': 1, 'stroke': 2}
-
+COLOR_DICT = {{'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}}
 def readTif(tifPath, keepThreshold=100, imgShape=(608, 608)):
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
@@ -92,6 +92,11 @@ def loadJson(jsonFolder):
                     labels[label['value']] = label['instanceURI']
             extractedItems[item['External ID']] = labels
     return extractedItems
+
+def label2Color(labelMask):
+    copyMask = copy.deepcopy(labelMask)
+
+
 
 if __name__ == '__main__':
     generateMasks()

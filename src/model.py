@@ -1,9 +1,11 @@
 import tensorflow as tf
-
 from tensorflow.keras.layers import *
 from tensorflow.keras.applications import *
 from tensorflow.keras.applications.xception import preprocess_input
-
+import tensorflow.keras as keras
+from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import ModelCheckpoint
+import tensorflow.keras.backend as K
 
 def ConvAndBatch(x, n_filters=64, kernel=(2, 2), strides=(1, 1), padding='valid', activation='relu'):
     filters = n_filters
@@ -107,5 +109,17 @@ def get_model():
     return inputs, xception.input, output
 
 if __name__ == '__main__':
-    m = get_model()
-    m.summary()
+    inputs, xception_inputs, ann = get_model()
+    model = Model(inputs=[inputs, xception_inputs], output=[ann])
+
+
+    # model.compile(optimizer=tf.train.RMSPropOptimizer(learning_rate=0.0001, decay=0.99),
+    def categorical_crossentropy(y_true, y_pred):
+        return K.categorical_crossentropy(y_true, y_pred, from_logits=True)
+
+
+    model.compile(optimizer=keras.optimizers.RMSprop(lr=0.01),
+                  loss=categorical_crossentropy,
+                  metrics=['accuracy'],
+                  )
+    model.summary()
