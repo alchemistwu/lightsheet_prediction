@@ -33,8 +33,7 @@ def data_generator(txtPath, batchSize=1):
         batchPathX, batchPathY = imgPaths[batch_start: batch_end], labelPaths[batch_start: batch_end]
         batchX, batchY = [], []
         for imgPath, labelPath in zip(batchPathX, batchPathY):
-            batchX.append(cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE))
-            print(labelPath)
+            batchX.append(cv2.imread(imgPath))
             batchY.append(np.load(labelPath))
         batchX = np.asarray(batchX, dtype=np.float32)
         batchY = np.asarray(batchY, dtype=np.float32)
