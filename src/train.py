@@ -7,6 +7,7 @@ import cv2
 from model import *
 from tensorflow.keras.callbacks import ModelCheckpoint
 import tensorflow
+import argparse as parser
 def loadSplitTxt(txtPath):
     assert os.path.exists(txtPath)
     imgPaths = []
@@ -87,4 +88,16 @@ def write_summary(history):
 
 
 if __name__ == '__main__':
-    train()
+    args = parser.ArgumentParser(description='Model training arguments')
+
+    args.add_argument('-eph', '--epochs', type=int, default=100,
+                      help='Number of epochs')
+
+    args.add_argument('-batches', '--batch_size', type=int, default=8,
+                      help='Number of batches per train')
+
+    parsed_arg = args.parse_args()
+
+
+    train(batchSize=parsed_arg.batch_size,
+          epochs=parsed_arg.epochs)
