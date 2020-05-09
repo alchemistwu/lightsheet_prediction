@@ -87,6 +87,4 @@ def write_summary(history):
 
 
 if __name__ == '__main__':
-    generator = data_generator(os.path.join("..", "dataset", "train.txt"))
-    x, y = next(generator)
-    print("OK")
+    train()
