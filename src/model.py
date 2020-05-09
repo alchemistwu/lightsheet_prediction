@@ -89,7 +89,7 @@ def FinalModel(x, layer_13, layer_14):
 
     # context path
     cp = ContextPath(layer_13, layer_14)
-    fusion = FeatureFusionModule(cp, x, 32)
+    fusion = FeatureFusionModule(cp, x, 3)
     ans = UpSampling2D(size=(8, 8), interpolation='bilinear')(fusion)
 
     return ans
