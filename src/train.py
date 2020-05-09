@@ -47,7 +47,7 @@ def train(learning_rate=0.001, batchSize=32, epochs=100):
     val_txt = os.path.join("..", "dataset", "val.txt")
     inputs, xception_inputs, ans = get_model()
     callbackList = [ModelCheckpoint(os.path.join(weights_folder, 'model.tf'), save_best_only=True, save_weights_only=True)]
-    m = Model(inputs=[inputs, xception_inputs], output=[ans])
+    m = Model(inputs=[inputs, xception_inputs], outputs=[ans])
 
     def categorical_crossentropy(y_true, y_pred):
         return K.categorical_crossentropy(y_true, y_pred, from_logits=True)
