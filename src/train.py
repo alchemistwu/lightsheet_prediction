@@ -4,7 +4,7 @@ import random
 import pandas as pd
 from copy import deepcopy
 import cv2
-from src.model import *
+from model import *
 from tensorflow.keras.callbacks import ModelCheckpoint
 def loadSplitTxt(txtPath):
     assert os.path.exists(txtPath)
