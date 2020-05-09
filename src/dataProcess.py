@@ -5,9 +5,10 @@ import cv2
 import urllib
 import json
 import copy
+import random
 
 LABEL_DICT = {'background': 0, 'normal': 1, 'stroke': 2}
-COLOR_DICT = {{'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}}
+COLOR_DICT = {'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}
 def readTif(tifPath, keepThreshold=100, imgShape=(608, 608)):
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
@@ -95,8 +96,33 @@ def loadJson(jsonFolder):
 
 def label2Color(labelMask):
     copyMask = copy.deepcopy(labelMask)
+    canvas = np.zeros(shape=(copyMask.shape[0], copyMask.shape[1], 3), dtype='uint8')
+    for key in LABEL_DICT.keys():
+        canvas[copyMask[:, :, LABEL_DICT[key]] == 1, :] = COLOR_DICT[key]
+    return canvas
 
+def genTxtTrainingSplit(split=0.2):
+    imgFolder = os.path.join('..', 'dataset', 'images')
+    labelFolder = os.path.join('..', 'dataset', 'label')
+    items = os.listdir(labelFolder)
+    random.shuffle(items)
+    valNum = int(len(items) * split)
+
+    fVal = open(os.path.join('..', 'dataset', 'val.txt'), 'w')
+    fTrain = open(os.path.join('..', 'dataset', 'train.txt'), 'w')
+
+    for index in range(len(items)):
+        assert os.path.exists(os.path.join(imgFolder, items[index].replace('.npy', '.png'))), print(os.path.join(imgFolder, items[index].replace('.npy', 'png')))
+        if index < valNum:
+            fVal.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
+        else:
+            fTrain.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
+    fVal.close()
+    fTrain.close()
 
 
 if __name__ == '__main__':
-    generateMasks()
+    # generateMasks()
+    # labelMask = np.load(os.path.join('..', 'dataset', 'label', '217.npy'))
+    # label2Color(labelMask)
+    genTxtTrainingSplit()

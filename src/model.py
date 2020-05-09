@@ -109,9 +109,8 @@ def get_model():
     return inputs, xception.input, output
 
 if __name__ == '__main__':
-    inputs, xception_inputs, ann = get_model()
-    model = Model(inputs=[inputs, xception_inputs], output=[ann])
-
+    inputs1, xception_inputs, ann = get_model()
+    model = Model(inputs=[inputs1, xception_inputs], output=[ann])
 
     # model.compile(optimizer=tf.train.RMSPropOptimizer(learning_rate=0.0001, decay=0.99),
     def categorical_crossentropy(y_true, y_pred):
