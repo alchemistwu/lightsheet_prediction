@@ -6,6 +6,7 @@ from copy import deepcopy
 import cv2
 from model import *
 from tensorflow.keras.callbacks import ModelCheckpoint
+import tensorflow
 def loadSplitTxt(txtPath):
     assert os.path.exists(txtPath)
     imgPaths = []
@@ -50,9 +51,9 @@ def train(learning_rate=0.001, batchSize=32, epochs=100):
     m = Model(inputs=[inputs, xception_inputs], outputs=[ans])
 
     def categorical_crossentropy(y_true, y_pred):
-        return K.categorical_crossentropy(y_true, y_pred, from_logits=True)
+        return tensorflow.keras.backend.categorical_crossentropy(y_true, y_pred, from_logits=True)
 
-    m.compile(optimizer=keras.optimizers.RMSprop(lr=learning_rate),
+    m.compile(optimizer=tensorflow.keras.optimizers.RMSprop(lr=learning_rate),
                   loss=categorical_crossentropy,
                   metrics=['accuracy']
                   )
@@ -62,7 +63,7 @@ def train(learning_rate=0.001, batchSize=32, epochs=100):
         train_steps = len(f.readlines()) // batchSize + 1
     with open(val_txt, 'r') as f:
         val_steps = len(f.readlines()) // batchSize + 1
-    history = model.fit_generator(train_generator, steps_per_epoch=train_steps,
+    history = m.fit_generator(train_generator, steps_per_epoch=train_steps,
                                       epochs=epochs, validation_data=val_generator,
                                   validation_steps=val_steps,
                                       callbacks=callbackList)
