@@ -38,7 +38,7 @@ def data_generator(txtPath, batchSize=1):
             batchY.append(np.load(labelPath))
         batchX = np.asarray(batchX, dtype=np.float32)
         batchY = np.asarray(batchY, dtype=np.float32)
-        yield (batchX, batchY)
+        yield ([batchX, batchX], batchY)
 
 def train(learning_rate=0.001, batchSize=32, epochs=100):
     weights_folder = os.path.join('weights')
