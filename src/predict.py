@@ -34,7 +34,7 @@ def predict(threshold=0.5, batchSize=4):
     val_generator = data_generator(val_txt, batchSize=batchSize)
     with open(val_txt, 'r') as f:
         val_steps = len(f.readlines()) // batchSize + 1
-    result = m.predict_generator(val_generator)
+    result = m.predict_generator(val_generator, steps=val_steps)
     print(result.shape)
 
     for i in range(result.shape[0]):
