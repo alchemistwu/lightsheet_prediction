@@ -7,38 +7,19 @@ import cv2
 from model import *
 from tensorflow.keras.callbacks import ModelCheckpoint
 import tensorflow
+from dataProcess import *
 import argparse as parser
-def loadSplitTxt(txtPath):
-    assert os.path.exists(txtPath)
-    imgPaths = []
-    labelPaths = []
-    with open(txtPath, 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            item = line.strip("\n")
-            imgPaths.append(item.split('#')[0])
-            labelPaths.append(item.split('#')[1])
-    return imgPaths, labelPaths
+try:
+    from src.model import *
+except:
+    pass
+try:
+    from src.dataProcess import *
+except:
+    pass
 
-def data_generator(txtPath, batchSize=1):
-    imgPaths, labelPaths = loadSplitTxt(txtPath)
-    index = 0
-    num_samples = len(imgPaths)
-    while True:
-        if index * batchSize > num_samples:
-            index = 0
-        batch_start = index * batchSize
-        batch_end = (index + 1) * batchSize
-        if batch_end > num_samples:
-            batch_end = num_samples
-        batchPathX, batchPathY = imgPaths[batch_start: batch_end], labelPaths[batch_start: batch_end]
-        batchX, batchY = [], []
-        for imgPath, labelPath in zip(batchPathX, batchPathY):
-            batchX.append(cv2.imread(imgPath))
-            batchY.append(np.load(labelPath))
-        batchX = np.asarray(batchX, dtype=np.float32)
-        batchY = np.asarray(batchY, dtype=np.float32)
-        yield ([batchX, batchX], batchY)
+
+
 
 def train(learning_rate=0.001, batchSize=32, epochs=100):
     weights_folder = os.path.join('weights')

@@ -9,6 +9,7 @@ import random
 
 LABEL_DICT = {'background': 0, 'normal': 1, 'stroke': 2}
 COLOR_DICT = {'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}
+
 def readTif(tifPath, keepThreshold=100, imgShape=(608, 608)):
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
@@ -119,6 +120,38 @@ def genTxtTrainingSplit(split=0.2):
             fTrain.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
     fVal.close()
     fTrain.close()
+
+def loadSplitTxt(txtPath):
+    assert os.path.exists(txtPath)
+    imgPaths = []
+    labelPaths = []
+    with open(txtPath, 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            item = line.strip("\n")
+            imgPaths.append(item.split('#')[0])
+            labelPaths.append(item.split('#')[1])
+    return imgPaths, labelPaths
+
+def data_generator(txtPath, batchSize=1):
+    imgPaths, labelPaths = loadSplitTxt(txtPath)
+    index = 0
+    num_samples = len(imgPaths)
+    while True:
+        if index * batchSize > num_samples:
+            index = 0
+        batch_start = index * batchSize
+        batch_end = (index + 1) * batchSize
+        if batch_end > num_samples:
+            batch_end = num_samples
+        batchPathX, batchPathY = imgPaths[batch_start: batch_end], labelPaths[batch_start: batch_end]
+        batchX, batchY = [], []
+        for imgPath, labelPath in zip(batchPathX, batchPathY):
+            batchX.append(cv2.imread(imgPath))
+            batchY.append(np.load(labelPath))
+        batchX = np.asarray(batchX, dtype=np.float32)
+        batchY = np.asarray(batchY, dtype=np.float32)
+        yield ([batchX, batchX], batchY)
 
 
 if __name__ == '__main__':
