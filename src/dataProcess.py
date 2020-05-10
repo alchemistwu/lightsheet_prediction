@@ -98,6 +98,7 @@ def loadJson(jsonFolder):
 def label2Color(labelMask):
     copyMask = copy.deepcopy(labelMask)
     canvas = np.zeros(shape=(copyMask.shape[0], copyMask.shape[1], 3), dtype='uint8')
+    print(copyMask.shape)
     for key in LABEL_DICT.keys():
         canvas[copyMask[:, :, LABEL_DICT[key]] == 1, :] = COLOR_DICT[key]
     return canvas
@@ -156,6 +157,8 @@ def data_generator(txtPath, batchSize=1):
 
 if __name__ == '__main__':
     # generateMasks()
-    # labelMask = np.load(os.path.join('..', 'dataset', 'label', '217.npy'))
-    # label2Color(labelMask)
-    genTxtTrainingSplit()
+    labelMask = np.load(os.path.join('..', 'dataset', 'label', '217.npy'))
+    img = label2Color(labelMask)
+    cv2.imshow('test', img)
+    cv2.waitKey()
+    # genTxtTrainingSplit()
