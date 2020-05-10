@@ -38,7 +38,7 @@ def predict(threshold=0.5, batchSize=4):
     print(result.shape)
 
     for i in range(result.shape[0]):
-        binarayMask = np.asarray(result[i] > threshold, dtype='uint8')
+        binarayMask = np.argmax(result[i], axis=-1)
         img = label2Color(binarayMask)
         cv2.imshow('test', img)
         cv2.waitKey()
