@@ -106,8 +106,9 @@ def label2Color(labelMask):
 def genTxtTrainingSplit(split=0.2):
     imgFolder = os.path.join('..', 'dataset', 'images')
     labelFolder = os.path.join('..', 'dataset', 'label')
-    items = os.listdir(labelFolder)
+    items = list(os.listdir(labelFolder))
     random.shuffle(items)
+
     valNum = int(len(items) * split)
 
     fVal = open(os.path.join('..', 'dataset', 'val.txt'), 'w')
@@ -152,6 +153,7 @@ def data_generator(txtPath, batchSize=1):
             batchY.append(np.load(labelPath))
         batchX = np.asarray(batchX, dtype=np.float32)
         batchY = np.asarray(batchY, dtype=np.float32)
+        index += 1
         yield ([batchX, batchX], batchY)
 
 
