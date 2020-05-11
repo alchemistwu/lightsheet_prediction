@@ -135,7 +135,7 @@ def loadSplitTxt(txtPath):
             labelPaths.append(item.split('#')[1])
     return imgPaths, labelPaths
 
-def data_generator(txtPath, batchSize=1):
+def data_generator(txtPath, batchSize=1, debug=False):
     imgPaths, labelPaths = loadSplitTxt(txtPath)
     index = 0
     num_samples = len(imgPaths)
@@ -149,8 +149,21 @@ def data_generator(txtPath, batchSize=1):
         batchPathX, batchPathY = imgPaths[batch_start: batch_end], labelPaths[batch_start: batch_end]
         batchX, batchY = [], []
         for imgPath, labelPath in zip(batchPathX, batchPathY):
-            batchX.append(cv2.imread(imgPath))
-            batchY.append(np.load(labelPath))
+
+            img = cv2.imread(imgPath)
+            label = np.load(labelPath)
+            rot, flip, shiftX, shiftY = getAugmentationParameters()
+            img = dataAugmentation(img, rot, flip, shiftX, shiftY)
+            label = dataAugmentation(label, rot, flip, shiftX, shiftY)
+            if debug:
+                cv2.imshow('img', img)
+                cv2.imshow('label', label2Color(label))
+                cv2.waitKey()
+            batchX.append(img)
+            batchY.append(label)
+
+            # batchX.append(cv2.imread(imgPath))
+            # batchY.append(np.load(labelPath))
         batchX = np.asarray(batchX, dtype=np.float32)
         batchY = np.asarray(batchY, dtype=np.float32)
         index += 1
@@ -165,11 +178,43 @@ def predict2Mask(prediction):
         copyMask[binarayMask == LABEL_DICT[key], :] = label
     return copyMask
 
+def dataAugmentation(img, rot, flip, shiftX, shiftY):
+    processedImg = img
+
+    if rot == 0:
+        processedImg = processedImg
+    else:
+        processedImg = np.rot90(processedImg, rot)
+
+    if flip == 0:
+        processedImg = processedImg
+    elif flip == 1:
+        processedImg = np.flipud(processedImg)
+    elif flip == 2:
+        processedImg = np.fliplr(processedImg)
+
+    non = lambda s: s if s < 0 else None
+    mom = lambda s: max(0, s)
+
+    ox, oy = shiftX, shiftY
+
+    shiftImg = np.zeros_like(processedImg)
+    shiftImg[mom(oy):non(oy), mom(ox):non(ox)] = processedImg[mom(-oy):non(-oy), mom(-ox):non(-ox)]
+
+    return shiftImg
+
+def getAugmentationParameters():
+    rot = random.randint(0, 3)
+    flip = random.randint(0, 2)
+    shiftX = random.randint(-200, 200)
+    shiftY = random.randint(-200, 200)
+    return rot, flip, shiftX, shiftY
 
 if __name__ == '__main__':
-    # generateMasks()
-    labelMask = np.load(os.path.join('..', 'dataset', 'label', '217.npy'))
-    img = label2Color(labelMask)
-    cv2.imshow('test', img)
-    cv2.waitKey()
-    # genTxtTrainingSplit()
+
+    train_txt = os.path.join("..", "dataset", "train.txt")
+    train_generator = data_generator(train_txt, batchSize=16, debug=True)
+    with open(train_txt, 'r') as f:
+        train_steps = len(f.readlines()) // 16 + 1
+    for i in range(train_steps):
+        next(train_generator)
