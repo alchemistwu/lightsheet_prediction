@@ -140,7 +140,7 @@ def data_generator(txtPath, batchSize=1):
     index = 0
     num_samples = len(imgPaths)
     while True:
-        if index * batchSize > num_samples:
+        if index * batchSize >= num_samples:
             index = 0
         batch_start = index * batchSize
         batch_end = (index + 1) * batchSize
@@ -155,6 +155,15 @@ def data_generator(txtPath, batchSize=1):
         batchY = np.asarray(batchY, dtype=np.float32)
         index += 1
         yield ([batchX, batchX], batchY)
+
+def predict2Mask(prediction):
+    copyMask = np.zeros(shape=(prediction.shape[0], prediction.shape[1], 3), dtype='uint8')
+    binarayMask = np.argmax(prediction, axis=-1)
+    for key in LABEL_DICT.keys():
+        label = np.zeros(shape=(len(LABEL_DICT.keys()), ), dtype='uint8')
+        label[LABEL_DICT[key]] = 1
+        copyMask[binarayMask == LABEL_DICT[key], :] = label
+    return copyMask
 
 
 if __name__ == '__main__':

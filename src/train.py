@@ -57,8 +57,8 @@ def write_summary(history):
 
     loss = history.history['loss']
     val_loss = history.history['val_loss']
-    acc = history.history['acc']
-    val_acc = history.history['val_acc']
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
     result_file_path = os.path.join(folder, "logs.txt")
     result_file = open(result_file_path, 'w')
     for i in range(0, len(loss)):
