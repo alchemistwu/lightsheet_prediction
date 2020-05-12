@@ -39,7 +39,7 @@ def train(learning_rate=0.001, batchSize=32, epochs=100):
                   metrics=['accuracy']
                   )
     train_generator = data_generator(train_txt, batchSize=batchSize)
-    val_generator = data_generator(val_txt, batchSize=batchSize)
+    val_generator = data_generator(val_txt, batchSize=batchSize, aug=False)
     with open(train_txt, 'r') as f:
         train_steps = len(f.readlines()) // batchSize + 1
     with open(val_txt, 'r') as f:
