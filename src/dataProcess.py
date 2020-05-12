@@ -170,8 +170,9 @@ def data_generator(txtPath, batchSize=1, debug=False, aug=True):
             else:
                 rot, flip, shiftX, shiftY = 0, 0, 0, 0
             shiftX, shiftY = 0, 0
-            img = dataAugmentation(img, rot, flip, shiftX, shiftY)
-            label = dataAugmentation(label, rot, flip, shiftX, shiftY)
+            if aug:
+                img = dataAugmentation(img, rot, flip, shiftX, shiftY, labelMask=False)
+                label = dataAugmentation(label, rot, flip, shiftX, shiftY, labelMask=True)
             if debug:
                 cv2.imshow('img', img)
                 cv2.imshow('label', label2Color(label))
@@ -195,7 +196,7 @@ def predict2Mask(prediction):
         copyMask[binarayMask == LABEL_DICT[key], :] = label
     return copyMask
 
-def dataAugmentation(img, rot, flip, shiftX, shiftY):
+def dataAugmentation(img, rot, flip, shiftX, shiftY, labelMask=False):
     processedImg = img
 
     if rot == 0:
@@ -216,7 +217,8 @@ def dataAugmentation(img, rot, flip, shiftX, shiftY):
     ox, oy = shiftX, shiftY
 
     shiftImg = np.zeros_like(processedImg)
-    shiftImg[:, :, 0] = 1
+    if labelMask:
+        shiftImg[:, :, 0] = 1
     shiftImg[mom(oy):non(oy), mom(ox):non(ox)] = processedImg[mom(-oy):non(-oy), mom(-ox):non(-ox)]
 
     return shiftImg
