@@ -128,11 +128,11 @@ def genTxtTrainingSplit(split=0.2):
     fTrain = open(os.path.join('..', 'dataset', 'train.txt'), 'w')
 
     for index in range(len(items)):
-        assert os.path.exists(os.path.join(imgFolder, items[index].replace('.npy', '.png'))), print(os.path.join(imgFolder, items[index].replace('.npy', 'png')))
-        if index < valNum:
-            fVal.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
-        else:
-            fTrain.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
+        if os.path.exists(os.path.join(imgFolder, items[index].replace('.npy', '.png'))):
+            if index < valNum:
+                fVal.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
+            else:
+                fTrain.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
     fVal.close()
     fTrain.close()
 
