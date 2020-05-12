@@ -47,7 +47,7 @@ def generateImages():
         tifStack = readTif(tifPath)
         saveTifStack(tifStack, saveFolder)
 
-def generateMasks(imgShape=(608, 608)):
+def generateMasks(imgShape=(608, 608), patient=100):
     global LABEL_DICT
     numClass = len(LABEL_DICT.keys())
     jsonFolder = os.path.join('..', 'dataset', 'json')
@@ -59,7 +59,9 @@ def generateMasks(imgShape=(608, 608)):
         os.mkdir(tmpFolder)
     if not os.path.exists(labelFolder):
         os.mkdir(labelFolder)
+
     for key in labelDict.keys():
+        failFlag = False
         if not labelDict[key]:
             if os.path.exists(os.path.join(imgFolder, key)):
                 os.remove(os.path.join(imgFolder, key))
@@ -68,14 +70,24 @@ def generateMasks(imgShape=(608, 608)):
             for labelKey in labelDict[key].keys():
                 if os.path.exists(os.path.join(tmpFolder, labelKey + '.png')):
                     os.remove(os.path.join(tmpFolder, labelKey + '.png'))
+                retryTimes = 0
                 while not os.path.exists(os.path.join(tmpFolder, labelKey + '.png')):
                     try:
                         urllib.request.urlretrieve(labelDict[key][labelKey], os.path.join(tmpFolder, labelKey + '.png'))
                     except:
                         print(labelDict[key][labelKey])
                         print("retrying...")
-                labelImage = cv2.imread(os.path.join(tmpFolder, labelKey + '.png'), cv2.IMREAD_GRAYSCALE)
-                initMask[:, :, LABEL_DICT[labelKey]][np.equal(labelImage, 255)] = 1
+                        retryTimes += 1
+                        if retryTimes > patient:
+                            failFlag = True
+                            break
+                if failFlag:
+                    if os.path.exists(os.path.join(imgFolder, key)):
+                        os.remove(os.path.join(imgFolder, key))
+                    break
+                else:
+                    labelImage = cv2.imread(os.path.join(tmpFolder, labelKey + '.png'), cv2.IMREAD_GRAYSCALE)
+                    initMask[:, :, LABEL_DICT[labelKey]][np.equal(labelImage, 255)] = 1
             MaskLeak = copy.deepcopy(initMask)
             MaskLeak = MaskLeak.sum(axis=2) == 0
             initMask[:, :, LABEL_DICT['normal']][MaskLeak] = 1
