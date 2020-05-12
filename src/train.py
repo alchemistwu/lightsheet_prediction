@@ -22,7 +22,7 @@ except:
 
 
 def train(learning_rate=0.001, batchSize=32, epochs=100):
-    weights_folder = os.path.join('weights')
+    weights_folder = os.path.join('..', 'weights')
     if not os.path.exists(weights_folder):
         os.mkdir(weights_folder)
     train_txt = os.path.join("..", "dataset", "train.txt")
@@ -51,7 +51,7 @@ def train(learning_rate=0.001, batchSize=32, epochs=100):
     write_summary(history)
 
 def write_summary(history):
-    folder = os.path.join('result')
+    folder = os.path.join('logs')
     if not os.path.exists(folder):
         os.mkdir(folder)
 
