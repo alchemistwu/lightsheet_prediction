@@ -200,6 +200,7 @@ def dataAugmentation(img, rot, flip, shiftX, shiftY):
     ox, oy = shiftX, shiftY
 
     shiftImg = np.zeros_like(processedImg)
+    shiftImg[:, :, 0] = 1
     shiftImg[mom(oy):non(oy), mom(ox):non(ox)] = processedImg[mom(-oy):non(-oy), mom(-ox):non(-ox)]
 
     return shiftImg
@@ -213,9 +214,10 @@ def getAugmentationParameters():
 
 if __name__ == '__main__':
 
-    train_txt = os.path.join("..", "dataset", "train.txt")
-    train_generator = data_generator(train_txt, batchSize=16, debug=True)
-    with open(train_txt, 'r') as f:
-        train_steps = len(f.readlines()) // 16 + 1
-    for i in range(train_steps):
-        next(train_generator)
+    # train_txt = os.path.join("..", "dataset", "train.txt")
+    # train_generator = data_generator(train_txt, batchSize=16, debug=True)
+    # with open(train_txt, 'r') as f:
+    #     train_steps = len(f.readlines()) // 16 + 1
+    # for i in range(train_steps):
+    #     next(train_generator)
+    generateMasks()
