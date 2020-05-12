@@ -169,6 +169,7 @@ def data_generator(txtPath, batchSize=1, debug=False, aug=True):
                 rot, flip, shiftX, shiftY = getAugmentationParameters()
             else:
                 rot, flip, shiftX, shiftY = 0, 0, 0, 0
+            shiftX, shiftY = 0, 0
             img = dataAugmentation(img, rot, flip, shiftX, shiftY)
             label = dataAugmentation(label, rot, flip, shiftX, shiftY)
             if debug:
