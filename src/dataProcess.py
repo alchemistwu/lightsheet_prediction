@@ -232,4 +232,5 @@ if __name__ == '__main__':
     #     train_steps = len(f.readlines()) // 16 + 1
     # for i in range(train_steps):
     #     next(train_generator)
-    generateMasks()
+    # generateMasks()
+    genTxtTrainingSplit()
