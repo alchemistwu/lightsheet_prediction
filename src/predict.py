@@ -33,7 +33,7 @@ def predict(threshold=0.5, batchSize=4):
                                           ".index", ""))
     m.load_weights(best_model_weights)
     print("Weights have been loaded!")
-    val_generator = data_generator(val_txt, batchSize=batchSize)
+    val_generator = data_generator(val_txt, batchSize=batchSize, aug=False)
     with open(val_txt, 'r') as f:
         val_steps = len(f.readlines()) // batchSize + 1
     index = 0

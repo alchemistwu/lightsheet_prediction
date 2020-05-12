@@ -148,7 +148,7 @@ def loadSplitTxt(txtPath):
             labelPaths.append(item.split('#')[1])
     return imgPaths, labelPaths
 
-def data_generator(txtPath, batchSize=1, debug=False):
+def data_generator(txtPath, batchSize=1, debug=False, aug=True):
     imgPaths, labelPaths = loadSplitTxt(txtPath)
     index = 0
     num_samples = len(imgPaths)
@@ -165,7 +165,10 @@ def data_generator(txtPath, batchSize=1, debug=False):
 
             img = cv2.imread(imgPath)
             label = np.load(labelPath)
-            rot, flip, shiftX, shiftY = getAugmentationParameters()
+            if aug:
+                rot, flip, shiftX, shiftY = getAugmentationParameters()
+            else:
+                rot, flip, shiftX, shiftY = 0, 0, 0, 0
             img = dataAugmentation(img, rot, flip, shiftX, shiftY)
             label = dataAugmentation(label, rot, flip, shiftX, shiftY)
             if debug:
