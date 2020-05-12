@@ -10,7 +10,7 @@ import random
 LABEL_DICT = {'background': 0, 'normal': 1, 'stroke': 2}
 COLOR_DICT = {'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}
 
-def readTif(tifPath, keepThreshold=100, imgShape=(608, 608)):
+def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True):
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
     (steps, height, width) = imgStack.shape
@@ -22,12 +22,14 @@ def readTif(tifPath, keepThreshold=100, imgShape=(608, 608)):
         blur = cv2.GaussianBlur(img8, (3, 3), 0)
         imgResize = cv2.resize(blur, imgShape)
         img3Channel = cv2.cvtColor(imgResize, cv2.COLOR_GRAY2RGB)
-        if np.max(imgResize) >= keepThreshold:
+        if filterDark:
+            if np.max(imgResize) >= keepThreshold:
+                processedStacks.append(img3Channel)
+        else:
             processedStacks.append(img3Channel)
 
         # cv2.imshow('im8', imgResize)
         # cv2.waitKey()
-
     return processedStacks
 
 def saveTifStack(tifStack, saveFolder):
@@ -46,6 +48,7 @@ def generateImages():
     for tifPath in tifPaths:
         tifStack = readTif(tifPath)
         saveTifStack(tifStack, saveFolder)
+
 
 def generateMasks(imgShape=(608, 608), patient=100):
     global LABEL_DICT
@@ -223,12 +226,20 @@ def dataAugmentation(img, rot, flip, shiftX, shiftY, labelMask=False):
 
     return shiftImg
 
+def prepareScanForPredict(tifPath):
+    processedStacks = readTif(tifPath, imgShape=(608, 608), filterDark=False)
+    x = np.asarray(processedStacks, dtype=np.float32)
+    return [x, x]
+
+
 def getAugmentationParameters():
     rot = random.randint(0, 3)
     flip = random.randint(0, 2)
     shiftX = random.randint(-200, 200)
     shiftY = random.randint(-200, 200)
     return rot, flip, shiftX, shiftY
+
+
 
 if __name__ == '__main__':
 

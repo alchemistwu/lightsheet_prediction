@@ -53,13 +53,40 @@ def predict(threshold=0.5, batchSize=4):
             # cv2.waitKey()
             index += 1
 
+def predictScan(tifPath):
+    x = prepareScanForPredict(tifPath)
+    weights_folder = os.path.join('..', 'weights')
+    if not os.path.exists(weights_folder):
+        os.mkdir(weights_folder)
+    scan_folder = os.path.join('..', 'scan')
+    if not os.path.exists(scan_folder):
+        os.mkdir(scan_folder)
+    inputs, xception_inputs, ans = get_model()
+    m = Model(inputs=[inputs, xception_inputs], outputs=[ans])
+    best_model_weights = os.path.join(weights_folder,
+                                      [item for item in os.listdir(weights_folder) if ".index" in item][0].replace(
+                                          ".index", ""))
+    m.load_weights(best_model_weights)
+    print("Weights have been loaded!")
+    predictions = m.predict(x, batch_size=4)
+
+    for i in range(predictions.shape[0]):
+        prediction = label2Color(predict2Mask(predictions[i]))
+        input = np.asarray(x[0][i], dtype='uint8')
+        cv2.imwrite(os.path.join(scan_folder, str(i) + '_predict.png'), prediction)
+        cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
 if __name__ == '__main__':
     args = parser.ArgumentParser(description='Model training arguments')
+
+    args.add_argument('-tif', '--tifScanPath', type=str, default=None,
+                      help='threshold')
 
     args.add_argument('-threshold', '--threshold', type=str, default=0.5,
                       help='threshold')
 
     parsed_arg = args.parse_args()
-
-    predict(threshold=float(parsed_arg.threshold))
+    if parsed_arg.tifScanPath:
+        predictScan(parsed_arg.tifScanPath)
+    else:
+        predict(threshold=float(parsed_arg.threshold))
