@@ -72,6 +72,7 @@ def generateMasks(imgShape=(608, 608)):
                     try:
                         urllib.request.urlretrieve(labelDict[key][labelKey], os.path.join(tmpFolder, labelKey + '.png'))
                     except:
+                        print(labelDict[key][labelKey])
                         print("retrying...")
                 labelImage = cv2.imread(os.path.join(tmpFolder, labelKey + '.png'), cv2.IMREAD_GRAYSCALE)
                 initMask[:, :, LABEL_DICT[labelKey]][np.equal(labelImage, 255)] = 1
