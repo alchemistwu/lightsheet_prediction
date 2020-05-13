@@ -10,12 +10,13 @@ import random
 LABEL_DICT = {'background': 0, 'normal': 1, 'stroke': 2}
 COLOR_DICT = {'background': (0, 0, 0), 'normal': (0, 255, 0), 'stroke': (255, 0, 0)}
 
-def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True):
+def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True, returnOriginal=False):
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
     (steps, height, width) = imgStack.shape
     print(imgStack.shape)
     processedStacks = []
+    originalStacks = []
     for step in range(steps):
         img8 = cv2.normalize(imgStack[step], None, 0, 255, cv2.NORM_MINMAX)
         img8 = np.asarray(img8, dtype='uint8')
@@ -27,10 +28,18 @@ def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True):
                 processedStacks.append(img3Channel)
         else:
             processedStacks.append(img3Channel)
+        if returnOriginal:
+            imgOrignal = cv2.normalize(imgStack[step], None, 0, 255, cv2.NORM_MINMAX)
+            imgOrignal = np.asarray(imgOrignal, dtype='uint8')
+            originalStacks.append(imgOrignal)
+
 
         # cv2.imshow('im8', imgResize)
         # cv2.waitKey()
-    return processedStacks
+    if returnOriginal:
+        return processedStacks, originalStacks
+    else:
+        return processedStacks
 
 def saveTifStack(tifStack, saveFolder):
     if not os.path.exists(saveFolder):
@@ -227,9 +236,9 @@ def dataAugmentation(img, rot, flip, shiftX, shiftY, labelMask=False):
     return shiftImg
 
 def prepareScanForPredict(tifPath):
-    processedStacks = readTif(tifPath, imgShape=(608, 608), filterDark=False)
+    processedStacks, originalStacks = readTif(tifPath, imgShape=(608, 608), filterDark=False, returnOriginal=True)
     x = np.asarray(processedStacks, dtype=np.float32)
-    return [x, x]
+    return [x, x], originalStacks
 
 
 def getAugmentationParameters():

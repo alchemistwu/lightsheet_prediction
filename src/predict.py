@@ -54,7 +54,7 @@ def predict(threshold=0.5, batchSize=4):
             index += 1
 
 def predictScan(tifPath):
-    x = prepareScanForPredict(tifPath)
+    x, oriX = prepareScanForPredict(tifPath)
     weights_folder = os.path.join('..', 'weights')
     if not os.path.exists(weights_folder):
         os.mkdir(weights_folder)
@@ -72,7 +72,9 @@ def predictScan(tifPath):
 
     for i in range(predictions.shape[0]):
         prediction = label2Color(predict2Mask(predictions[i]))
-        input = np.asarray(x[0][i], dtype='uint8')
+        # input = np.asarray(x[0][i], dtype='uint8')
+        input = oriX[i]
+        prediction = cv2.resize(prediction, (input.shape[1], input.shape[0]))
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_predict.png'), prediction)
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
