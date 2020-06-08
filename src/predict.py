@@ -91,7 +91,8 @@ def calculateVolume(tifPath,
         for key in colorDict.keys():
             if key not in numDict.keys():
                 numDict[key] = 0
-            numDict[key] += np.asarray(imgArray == colorDict[key], dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
+            mask = np.all(imgArray == colorDict[key], axis=-1)
+            numDict[key] += np.asarray(mask, dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
 
     print(numDict)
 
