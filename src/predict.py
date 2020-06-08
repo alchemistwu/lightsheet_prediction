@@ -80,12 +80,14 @@ def predictScan(tifPath):
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
 def calculateVolume(tifPath,
-                    widthRatio=0.0014, heightRatio=0.0014, thicknessRatio=0.005,
-                    colorDict=None):
+                    widthRatio=0.00143, heightRatio=0.00143, thicknessRatio=0.005,
+                    colorDict=None, rawImageShape=(2448, 2048), inputShape=(608, 608)):
     if not colorDict:
         global COLOR_DICT
         colorDict = COLOR_DICT
     assert os.path.isdir(tifPath), 'Path not exist!'
+    widthRatio = widthRatio * (float(rawImageShape[0])/ float(inputShape[0]))
+    heightRatio = heightRatio * (float(rawImageShape[1]) / float(inputShape[1]))
     numDict = {}
     for img in tqdm([cv2.imread(os.path.join(tifPath, imgPath)) for imgPath in os.listdir(tifPath)]):
         imgArray = np.asarray(img)
