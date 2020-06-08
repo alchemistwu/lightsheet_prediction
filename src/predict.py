@@ -9,6 +9,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint
 import tensorflow
 from dataProcess import *
 import argparse as parser
+from tqdm import tqdm
 try:
     from src.model import *
 except:
@@ -79,14 +80,14 @@ def predictScan(tifPath):
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
 def calculateVolume(tifPath,
-                    widthRatio=1.4, heightRatio=1.4, thicknessRatio=5,
+                    widthRatio=0.0014, heightRatio=0.0014, thicknessRatio=0.005,
                     colorDict=None):
     if not colorDict:
         global COLOR_DICT
         colorDict = COLOR_DICT
     assert os.path.isdir(tifPath), 'Path not exist!'
     numDict = {}
-    for img in [cv2.imread(imgPath) for imgPath in os.listdir(tifPath)]:
+    for img in tqdm([cv2.imread(os.path.join(tifPath, imgPath)) for imgPath in os.listdir(tifPath)]):
         imgArray = np.asarray(img)
         for key in colorDict.keys():
             if key not in numDict.keys():
@@ -117,3 +118,4 @@ if __name__ == '__main__':
         calculateVolume(parsed_arg.tifVolumePath)
     else:
         predict(threshold=float(parsed_arg.threshold))
+    # calculateVolume("../new_bsaFITC_PT_mouse4_dec16_stitched.tif")
