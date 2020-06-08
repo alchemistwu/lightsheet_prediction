@@ -78,11 +78,33 @@ def predictScan(tifPath):
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_predict.png'), prediction)
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
+def calculateVolume(tifPath,
+                    widthRatio=1.4, heightRatio=1.4, thicknessRatio=5,
+                    colorDict=None):
+    if not colorDict:
+        global COLOR_DICT
+        colorDict = COLOR_DICT
+    assert os.path.isdir(tifPath), 'Path not exist!'
+    numDict = {}
+    for img in [cv2.imread(imgPath) for imgPath in os.listdir(tifPath)]:
+        imgArray = np.asarray(img)
+        for key in colorDict.keys():
+            if key not in numDict.keys():
+                numDict[key] = 0
+            numDict[key] += np.asarray(imgArray == colorDict[key], dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
+
+    print(numDict)
+
+
+
 if __name__ == '__main__':
     args = parser.ArgumentParser(description='Model training arguments')
 
     args.add_argument('-tif', '--tifScanPath', type=str, default=None,
-                      help='threshold')
+                      help='tif path')
+
+    args.add_argument('-volume', '--tifVolumePath', type=str, default=None,
+                      help='tif path')
 
     args.add_argument('-threshold', '--threshold', type=str, default=0.5,
                       help='threshold')
@@ -90,5 +112,7 @@ if __name__ == '__main__':
     parsed_arg = args.parse_args()
     if parsed_arg.tifScanPath:
         predictScan(parsed_arg.tifScanPath)
+    elif parsed_arg.tifVolumePath:
+        calculateVolume(parsed_arg.tifVolumePath)
     else:
         predict(threshold=float(parsed_arg.threshold))
