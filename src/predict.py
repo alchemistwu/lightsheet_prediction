@@ -76,7 +76,7 @@ def predictScan(tifPath):
         prediction = label2Color(predict2Mask(predictions[i]))
         # input = np.asarray(x[0][i], dtype='uint8')
         input = oriX[i]
-        prediction = cv2.resize(prediction, (input.shape[1], input.shape[0]))
+        # prediction = cv2.resize(prediction, (input.shape[1], input.shape[0]))
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_predict.png'), prediction)
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
 
