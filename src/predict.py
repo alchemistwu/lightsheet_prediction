@@ -131,7 +131,7 @@ def dict2Piechart(volumePath, resultDict):
         os.mkdir(figuresPath)
     imgSavePath = os.path.join(figuresPath, brainId + '.png')
     plt.tight_layout()
-    fig.savefig(imgSavePath, dpi=fig.dpi,)
+    fig.savefig(imgSavePath, dpi=fig.dpi, bbox_inches = "tight")
 
 
 if __name__ == '__main__':
