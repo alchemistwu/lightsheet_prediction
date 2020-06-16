@@ -98,8 +98,9 @@ def calculateVolume(tifPath,
             mask = np.all(imgArray == colorDict[key], axis=-1)
             numDict[key] += np.asarray(mask, dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
     print(numDict)
+    return numDict
 
-def dict2Piechart(resultDict):
+def dict2Piechart(volumePath, resultDict):
     fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
     keys = list(resultDict.keys())
     data = [resultDict[key] for key in keys]
@@ -120,9 +121,14 @@ def dict2Piechart(resultDict):
         ax.annotate("%5s: %.2f%%" % (keys[i], 100. * float(resultDict[keys[i]]) / float(sum(data))), xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                     horizontalalignment=horizontalalignment, **kw)
 
-    ax.set_title("Matplotlib bakery: A donut")
 
-    plt.show()
+    brainId = os.path.basename(volumePath)
+    ax.set_title("Stroke Volume: %s" % brainId)
+    figuresPath = os.path.join('..', 'figs')
+    if not os.path.exists(figuresPath):
+        os.mkdir(figuresPath)
+    imgSavePath = os.path.join(figuresPath, brainId + '.png')
+    fig.savefig(imgSavePath, dpi=fig.dpi)
 
 
 if __name__ == '__main__':
@@ -146,7 +152,7 @@ if __name__ == '__main__':
     elif parsed_arg.tifVolumePath:
         dataDict = calculateVolume(parsed_arg.tifVolumePath)
         if parsed_arg.pie == 1:
-            dict2Piechart(dataDict)
+            dict2Piechart(parsed_arg.tifVolumePath, dataDict)
     else:
         predict(threshold=float(parsed_arg.threshold))
 
