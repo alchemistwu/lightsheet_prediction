@@ -119,7 +119,7 @@ def dict2Piechart(volumePath, resultDict):
         connectionstyle = "angle,angleA=0,angleB={}".format(ang)
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
         ax.annotate("%5s: %.2f Cubic Millimeters, %.2f%%" %
-                    (keys[i], data[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
+                    (keys[i], resultDict[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
                     xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                     horizontalalignment=horizontalalignment, **kw)
 
