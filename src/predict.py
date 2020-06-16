@@ -156,7 +156,7 @@ if __name__ == '__main__':
     args.add_argument('-height', '--rawHeight', type=int, default=2048,
                       help='height of raw tif scan')
 
-    args.add_argument('-step', '--stepThickness', type=int, default=0.005,
+    args.add_argument('-step', '--stepThickness', type=float, default=0.005,
                       help='thinkness, step interval')
 
     parsed_arg = args.parse_args()
