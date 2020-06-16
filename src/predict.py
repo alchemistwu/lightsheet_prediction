@@ -130,7 +130,8 @@ def dict2Piechart(volumePath, resultDict):
     if not os.path.exists(figuresPath):
         os.mkdir(figuresPath)
     imgSavePath = os.path.join(figuresPath, brainId + '.png')
-    fig.savefig(imgSavePath, dpi=fig.dpi)
+    plt.tight_layout()
+    fig.savefig(imgSavePath, dpi=fig.dpi,)
 
 
 if __name__ == '__main__':
