@@ -102,7 +102,7 @@ def calculateVolume(tifPath,
 
 def dict2Piechart(volumePath, resultDict):
     fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-    keys = list(resultDict.keys())
+    keys = [key for key in resultDict.keys() if key != 'background']
     data = [resultDict[key] for key in keys]
 
     wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
@@ -118,7 +118,9 @@ def dict2Piechart(volumePath, resultDict):
         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
         connectionstyle = "angle,angleA=0,angleB={}".format(ang)
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-        ax.annotate("%5s: %.2f%%" % (keys[i], 100. * float(resultDict[keys[i]]) / float(sum(data))), xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+        ax.annotate("%5s: %.2f Cubic Millimeters, %.2f%%" %
+                    (keys[i], data[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
+                    xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
                     horizontalalignment=horizontalalignment, **kw)
 
 
