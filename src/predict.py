@@ -156,12 +156,16 @@ if __name__ == '__main__':
     args.add_argument('-height', '--rawHeight', type=int, default=2048,
                       help='height of raw tif scan')
 
+    args.add_argument('-step', '--stepThickness', type=int, default=0.005,
+                      help='thinkness, step interval')
+
     parsed_arg = args.parse_args()
     if parsed_arg.tifScanPath:
         predictScan(parsed_arg.tifScanPath)
     elif parsed_arg.tifVolumePath:
         dataDict = calculateVolume(parsed_arg.tifVolumePath,
-                                   rawImageShape=(parsed_arg.rawWidth, parsed_arg.rawHeight))
+                                   rawImageShape=(parsed_arg.rawWidth, parsed_arg.rawHeight),
+                                   thicknessRatio=parsed_arg.stepThickness)
         if parsed_arg.pie == 1:
             dict2Piechart(parsed_arg.tifVolumePath, dataDict)
     else:
