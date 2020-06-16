@@ -90,7 +90,7 @@ def calculateVolume(tifPath,
     widthRatio = widthRatio * (float(rawImageShape[0])/ float(inputShape[0]))
     heightRatio = heightRatio * (float(rawImageShape[1]) / float(inputShape[1]))
     numDict = {}
-    for img in tqdm([cv2.imread(os.path.join(tifPath, imgPath)) for imgPath in os.listdir(tifPath)]):
+    for img in tqdm([cv2.imread(os.path.join(tifPath, imgPath)) for imgPath in os.listdir(tifPath) if 'predict' in imgPath]):
         imgArray = np.asarray(img)
         for key in colorDict.keys():
             if key not in numDict.keys():
