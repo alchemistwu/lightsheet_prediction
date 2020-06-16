@@ -120,7 +120,7 @@ def dict2Piechart(volumePath, resultDict):
         kw["arrowprops"].update({"connectionstyle": connectionstyle})
         ax.annotate("%5s: %.2f mm3, %.2f%%" %
                     (keys[i], resultDict[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
-                    xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+                    xy=(x, y), xytext=(1.35 * np.sign(x), 1.2 * y),
                     horizontalalignment=horizontalalignment, **kw)
 
 
@@ -132,7 +132,7 @@ def dict2Piechart(volumePath, resultDict):
         os.mkdir(figuresPath)
     imgSavePath = os.path.join(figuresPath, brainId + '.png')
     plt.tight_layout()
-    fig.savefig(imgSavePath, bbox_extra_artists=title, bbox_inches="tight")
+    fig.savefig(imgSavePath, bbox_inches="tight")
 
 
 if __name__ == '__main__':
