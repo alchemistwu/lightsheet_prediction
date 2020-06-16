@@ -7,6 +7,7 @@ import cv2
 from model import *
 from tensorflow.keras.callbacks import ModelCheckpoint
 import tensorflow
+import matplotlib.pyplot as plt
 from dataProcess import *
 import argparse as parser
 from tqdm import tqdm
@@ -96,9 +97,32 @@ def calculateVolume(tifPath,
                 numDict[key] = 0
             mask = np.all(imgArray == colorDict[key], axis=-1)
             numDict[key] += np.asarray(mask, dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
-
     print(numDict)
 
+def dict2Piechart(resultDict):
+    fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
+    keys = list(resultDict.keys())
+    data = [resultDict[key] for key in keys]
+
+    wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+
+    bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+    kw = dict(arrowprops=dict(arrowstyle="-"),
+              bbox=bbox_props, zorder=0, va="center")
+
+    for i, p in enumerate(wedges):
+        ang = (p.theta2 - p.theta1) / 2. + p.theta1
+        y = np.sin(np.deg2rad(ang))
+        x = np.cos(np.deg2rad(ang))
+        horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+        connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+        kw["arrowprops"].update({"connectionstyle": connectionstyle})
+        ax.annotate("%5s: %.2f%%" % (keys[i], 100. * float(resultDict[keys[i]]) / float(sum(data))), xy=(x, y), xytext=(1.35 * np.sign(x), 1.4 * y),
+                    horizontalalignment=horizontalalignment, **kw)
+
+    ax.set_title("Matplotlib bakery: A donut")
+
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -113,11 +137,18 @@ if __name__ == '__main__':
     args.add_argument('-threshold', '--threshold', type=str, default=0.5,
                       help='threshold')
 
+    args.add_argument('-pie', '--pie', type=int, default=None,
+                      help='show pie chart, integer 1 means True')
+
     parsed_arg = args.parse_args()
     if parsed_arg.tifScanPath:
         predictScan(parsed_arg.tifScanPath)
     elif parsed_arg.tifVolumePath:
-        calculateVolume(parsed_arg.tifVolumePath)
+        dataDict = calculateVolume(parsed_arg.tifVolumePath)
+        if parsed_arg.pie == 1:
+            dict2Piechart(dataDict)
     else:
         predict(threshold=float(parsed_arg.threshold))
-    # calculateVolume("../new_bsaFITC_PT_mouse4_dec16_stitched.tif")
+
+    # dataDict = calculateVolume("../new_bsaFITC_PT_mouse4_dec16_stitched.tif")
+    # dict2Piechart(dataDict)
