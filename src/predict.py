@@ -125,13 +125,14 @@ def dict2Piechart(volumePath, resultDict):
 
 
     brainId = os.path.basename(volumePath)
-    ax.set_title("Stroke Volume: %s" % brainId)
+    # title = ax.set_title("Stroke Volume: %s" % brainId)
+    title = plt.title("Stroke Volume: %s" % brainId)
     figuresPath = os.path.join('..', 'figs')
     if not os.path.exists(figuresPath):
         os.mkdir(figuresPath)
     imgSavePath = os.path.join(figuresPath, brainId + '.png')
     plt.tight_layout()
-    fig.savefig(imgSavePath, dpi=fig.dpi, bbox_inches = "tight")
+    fig.savefig(imgSavePath, bbox_extra_artists=(title), bbox_inches="tight")
 
 
 if __name__ == '__main__':
