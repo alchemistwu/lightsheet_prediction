@@ -1,24 +1,26 @@
-import os
-import numpy as np
-import random
-import pandas as pd
-from copy import deepcopy
-import cv2
 from model import *
-from tensorflow.keras.callbacks import ModelCheckpoint
-import tensorflow
+
 import matplotlib.pyplot as plt
 from dataProcess import *
-import argparse as parser
 from tqdm import tqdm
-try:
-    from src.model import *
-except:
-    pass
-try:
-    from src.dataProcess import *
-except:
-    pass
+
+
+from PyQt5.QtWidgets import (QMainWindow, QWidget, QPushButton, QLabel,
+                             QGridLayout, QComboBox, QRadioButton, QButtonGroup,
+                             QApplication)
+from tkinter.filedialog import askdirectory, askopenfilename
+from tkinter.messagebox import showwarning, showinfo
+from tkinter import Tk
+
+
+# try:
+#     from src.model import *
+# except:
+#     pass
+# try:
+#     from src.dataProcess import *
+# except:
+#     pass
 
 def predict(threshold=0.5, batchSize=4):
     weights_folder = os.path.join('..', 'weights')
@@ -49,38 +51,45 @@ def predict(threshold=0.5, batchSize=4):
             cv2.imwrite(os.path.join(result_folder, str(index) + '_predict.png'), prediction)
             cv2.imwrite(os.path.join(result_folder, str(index) + '_input.png'), input)
             cv2.imwrite(os.path.join(result_folder, str(index) + '_label.png'), label)
-            # cv2.imshow('predict', prediction)
-            # cv2.imshow('input', input)
-            # cv2.imshow('label', label)
-            # cv2.waitKey()
             index += 1
 
-def predictScan(tifPath):
+def predictScan(tifPath, scanPath, consider_list):
     x, oriX = prepareScanForPredict(tifPath)
-    weights_folder = os.path.join('..', 'weights')
-    if not os.path.exists(weights_folder):
-        os.mkdir(weights_folder)
-    scan_folder = os.path.join('..', 'scan')
+    oriHeight, oriWidth = oriX[0].shape[1], oriX[0].shape[0]
+    scan_folder = scanPath
     if not os.path.exists(scan_folder):
         os.mkdir(scan_folder)
+    assert os.path.isdir(scan_folder)
     inputs, xception_inputs, ans = get_model()
     m = Model(inputs=[inputs, xception_inputs], outputs=[ans])
+    weights_folder = os.path.join('..', 'weights')
+    assert os.path.exists(weights_folder)
     best_model_weights = os.path.join(weights_folder,
                                       [item for item in os.listdir(weights_folder) if ".index" in item][0].replace(
                                           ".index", ""))
     m.load_weights(best_model_weights)
     print("Weights have been loaded!")
-    predictions = m.predict(x, batch_size=4)
+    predictions = m.predict(x, batch_size=4, verbose=1)
+    print("Writing Predicted results...")
 
-    for i in range(predictions.shape[0]):
-        prediction = label2Color(predict2Mask(predictions[i]))
+    background, normal, stroke = False, False, False
+
+
+    if 'background' in consider_list:
+        background = True
+    if 'normal' in consider_list:
+        normal = True
+    if 'stroke' in consider_list:
+        stroke = True
+    for i in tqdm(range(predictions.shape[0])):
+        prediction = label2Color(predict2Mask(predictions[i]), background=background, normal=normal, stroke=stroke)
         # input = np.asarray(x[0][i], dtype='uint8')
         input = oriX[i]
-        # prediction = cv2.resize(prediction, (input.shape[1], input.shape[0]))
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_predict.png'), prediction)
         cv2.imwrite(os.path.join(scan_folder, str(i) + '_input.png'), input)
+    return oriHeight, oriWidth
 
-def calculateVolume(tifPath,
+def calculateVolume(tifPath,considerList,
                     widthRatio=0.00143, heightRatio=0.00143, thicknessRatio=0.005,
                     colorDict=None, rawImageShape=(2448, 2048), inputShape=(608, 608)):
     if not colorDict:
@@ -93,16 +102,18 @@ def calculateVolume(tifPath,
     for img in tqdm([cv2.imread(os.path.join(tifPath, imgPath)) for imgPath in os.listdir(tifPath) if 'predict' in imgPath]):
         imgArray = np.asarray(img)
         for key in colorDict.keys():
+            if key not in considerList:
+                continue
             if key not in numDict.keys():
                 numDict[key] = 0
             mask = np.all(imgArray == colorDict[key], axis=-1)
             numDict[key] += np.asarray(mask, dtype=np.float).sum() * widthRatio * heightRatio * thicknessRatio
-    print(numDict)
+    # print(numDict)
     return numDict
 
-def dict2Piechart(volumePath, resultDict):
+def dict2Piechart(volumePath, resultDict, considerList):
     fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-    keys = [key for key in resultDict.keys() if key != 'background']
+    keys = [key for key in resultDict.keys() if key in considerList]
     data = [resultDict[key] for key in keys]
 
     wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
@@ -125,51 +136,241 @@ def dict2Piechart(volumePath, resultDict):
 
 
     brainId = os.path.basename(volumePath)
-    # title = ax.set_title("Stroke Volume: %s" % brainId)
     title = plt.title("Stroke Volume: %s" % brainId)
-    figuresPath = os.path.join('..', 'figs')
+
+    figuresPath = os.path.dirname(volumePath)
+
     if not os.path.exists(figuresPath):
         os.mkdir(figuresPath)
     imgSavePath = os.path.join(figuresPath, brainId + '.png')
     plt.tight_layout()
     fig.savefig(imgSavePath, bbox_inches="tight")
 
+# def dict2Piechart(volumePath, resultDict):
+#     fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
+#     keys = [key for key in resultDict.keys() if key != 'background']
+#     data = [resultDict[key] for key in keys]
+#
+#     wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
+#
+#     bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
+#     kw = dict(arrowprops=dict(arrowstyle="-"),
+#               bbox=bbox_props, zorder=0, va="center")
+#
+#     for i, p in enumerate(wedges):
+#         ang = (p.theta2 - p.theta1) / 2. + p.theta1
+#         y = np.sin(np.deg2rad(ang))
+#         x = np.cos(np.deg2rad(ang))
+#         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
+#         connectionstyle = "angle,angleA=0,angleB={}".format(ang)
+#         kw["arrowprops"].update({"connectionstyle": connectionstyle})
+#         ax.annotate("%5s: %.2f mm3, %.2f%%" %
+#                     (keys[i], resultDict[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
+#                     xy=(x, y), xytext=(1.35 * np.sign(x), 1.1 * y),
+#                     horizontalalignment=horizontalalignment, **kw)
+#
+#
+#     brainId = os.path.basename(volumePath)
+#     # title = ax.set_title("Stroke Volume: %s" % brainId)
+#     title = plt.title("Stroke Volume: %s" % brainId)
+#     figuresPath = os.path.join('..', 'figs')
+#     if not os.path.exists(figuresPath):
+#         os.mkdir(figuresPath)
+#     imgSavePath = os.path.join(figuresPath, brainId + '.png')
+#     plt.tight_layout()
+#     fig.savefig(imgSavePath, bbox_inches="tight")
+
+def gui_entrance():
+
+    class StartWindow(QMainWindow):
+        """
+        Main entrance of the whole process.
+        """
+
+        def __init__(self):
+            super().__init__()
+            self.root_dir = "/"
+            self.save_dir = "/"
+            self.widget_main = QWidget()
+            self.layout_main = QGridLayout()
+            self.widget_main.setLayout(self.layout_main)
+
+            self.widget_radio = QWidget()
+            self.layout_radio = QGridLayout()
+            self.widget_radio.setLayout(self.layout_radio)
+
+            self.widget_thickness = QWidget()
+            self.layout_thickness = QGridLayout()
+            self.widget_thickness.setLayout(self.layout_thickness)
+
+            self.radio_label_background = QRadioButton("Background")
+            self.radio_group = QButtonGroup(self.widget_main)
+            self.radio_group.setExclusive(False)
+            self.radio_group.addButton(self.radio_label_background)
+
+            self.radio_label_normal = QRadioButton("Normal")
+            self.radio_group.addButton(self.radio_label_normal)
+
+            self.radio_label_stroke = QRadioButton("Stroke")
+            self.radio_group.addButton(self.radio_label_stroke)
+
+
+            self.radio_label_background.setChecked(True)
+            self.radio_label_stroke.setChecked(True)
+            self.radio_label_normal.setChecked(True)
+
+            self.radio_label_background.clicked.connect(self.on_radio_clicked)
+            self.radio_label_stroke.clicked.connect(self.on_radio_clicked)
+            self.radio_label_normal.clicked.connect(self.on_radio_clicked)
+
+            self.labelnote = QLabel("*Select which category to consider")
+
+            self.labelRootDir = QLabel("Select tiff file to perform segmentation. (i.e. images/1.tif)")
+            self.btnRootDir = QPushButton('Select')
+            self.btnRootDir.clicked.connect(self.select_rootDir)
+            self.lineRootDir = QLabel(self.root_dir)
+
+            self.labelSaveDir = QLabel("Select directory to save results (different from root directory)")
+            self.btnSaveDir = QPushButton('Select')
+            self.btnSaveDir.clicked.connect(self.select_saveDir)
+            self.lineSaveDir = QLabel(self.save_dir)
+
+            self.btnRun = QPushButton("Run")
+            self.btnRun.clicked.connect(self.analyse)
+
+            self.thickness_label = QLabel(self)
+            self.thickness_label.setText('Section thickness:')
+            self.thickness_combo = QComboBox(self)
+
+            self.thickness_combo.addItem("50")
+            self.thickness_combo.addItem("100")
+
+            self.layout_main.addWidget(self.labelRootDir, 1, 0)
+            self.layout_main.addWidget(self.lineRootDir, 2, 0)
+            self.layout_main.addWidget(self.btnRootDir, 2, 1)
+
+            self.layout_main.addWidget(self.labelSaveDir, 3, 0)
+            self.layout_main.addWidget(self.lineSaveDir, 4, 0)
+            self.layout_main.addWidget(self.btnSaveDir, 4, 1)
+
+
+            self.layout_main.addWidget(self.labelnote, 7, 0)
+
+            self.layout_radio.addWidget(self.radio_label_normal, 0, 0)
+            self.layout_radio.addWidget(self.radio_label_background, 0, 1)
+            self.layout_radio.addWidget(self.radio_label_stroke, 0, 2)
+            self.layout_main.addWidget(self.widget_radio, 8, 0)
+
+
+            self.layout_thickness.addWidget(self.thickness_label, 0, 0)
+            self.layout_thickness.addWidget(self.thickness_combo, 0, 1)
+            self.layout_main.addWidget(self.widget_thickness, 12, 0)
+
+            self.layout_main.addWidget(self.btnRun, 12, 1)
+            self.setCentralWidget(self.widget_main)
+
+            self.show()
+
+        def choosePath(self, file=False):
+            root = Tk()
+            root.withdraw()
+            if not file:
+                result = askdirectory(initialdir="/", title="Select Tiff File")
+            else:
+                result = askopenfilename(initialdir = "/",title = "Select file",filetypes = (("Tiff files","*.tif"),("all files","*.*")))
+            return result
+
+        def on_radio_clicked(self):
+
+            if not (
+                self.radio_label_background.isChecked() or
+                self.radio_label_normal.isChecked() or
+                self.radio_label_stroke.isChecked()
+            ):
+                self.sender().setChecked(True)
+                root = Tk()
+                root.withdraw()
+                showwarning("Warning!", "At least one category should be selected!!")
+
+
+        def select_rootDir(self):
+            self.root_dir = self.choosePath(file=True)
+            if type(self.root_dir) is str:
+                self.lineRootDir.setText(self.root_dir)
+            else:
+                pass
+
+        def select_saveDir(self):
+            self.save_dir = self.choosePath()
+            if type(self.save_dir) is str:
+                self.lineSaveDir.setText(self.save_dir)
+            else:
+                pass
+
+        def analyse(self):
+            thickness = int(str(self.thickness_combo.currentText())) * 0.0001
+            consider_list = [btn.text().lower() for btn in
+                             [self.radio_label_normal, self.radio_label_background, self.radio_label_stroke]
+                             if btn.isChecked()]
+            tif_path = self.lineRootDir.text()
+            volume_path = self.lineSaveDir.text()
+            volume_path = os.path.join(volume_path, os.path.basename(tif_path).split('.')[0])
+            if not os.path.exists(volume_path):
+                os.mkdir(volume_path)
+            oriHeight, oriWidth = predictScan(tif_path, volume_path, consider_list)
+
+            # print(thickness)
+            # print(consider_list)
+            # print(tif_path)
+            # print(volume_path)
+            # print(oriHeight, oriWidth)
+
+            dataDict = calculateVolume(volume_path, considerList=consider_list,
+                                       rawImageShape=(oriHeight, oriWidth),
+                                       thicknessRatio=thickness,
+                                       )
+            dict2Piechart(volume_path, dataDict, considerList=consider_list)
+            showinfo("Finshed!", "Current task %s completed!" % os.path.basename(tif_path))
+
+    app = QApplication([])
+    start_window = StartWindow()
+    start_window.show()
+    app.exit(app.exec_())
 
 if __name__ == '__main__':
-    args = parser.ArgumentParser(description='Model training arguments')
-
-    args.add_argument('-tif', '--tifScanPath', type=str, default=None,
-                      help='tif path')
-
-    args.add_argument('-volume', '--tifVolumePath', type=str, default=None,
-                      help='tif path')
-
-    args.add_argument('-threshold', '--threshold', type=str, default=0.5,
-                      help='threshold')
-
-    args.add_argument('-pie', '--pie', type=int, default=None,
-                      help='show pie chart, integer 1 means True')
-
-    args.add_argument('-width', '--rawWidth', type=int, default=2448,
-                      help='width of raw Tif scan')
-
-    args.add_argument('-height', '--rawHeight', type=int, default=2048,
-                      help='height of raw tif scan')
-
-    args.add_argument('-step', '--stepThickness', type=float, default=0.005,
-                      help='thinkness, step interval')
-
-    parsed_arg = args.parse_args()
-    if parsed_arg.tifScanPath:
-        predictScan(parsed_arg.tifScanPath)
-    elif parsed_arg.tifVolumePath:
-        dataDict = calculateVolume(parsed_arg.tifVolumePath,
-                                   rawImageShape=(parsed_arg.rawWidth, parsed_arg.rawHeight),
-                                   thicknessRatio=parsed_arg.stepThickness)
-        if parsed_arg.pie == 1:
-            dict2Piechart(parsed_arg.tifVolumePath, dataDict)
-    else:
-        predict(threshold=float(parsed_arg.threshold))
-
-    # dataDict = calculateVolume("../new_bsaFITC_PT_mouse4_dec16_stitched.tif")
-    # dict2Piechart(dataDict)
+    # args = parser.ArgumentParser(description='Model training arguments')
+    #
+    # args.add_argument('-tif', '--tifScanPath', type=str, default=None,
+    #                   help='tif path')
+    #
+    # args.add_argument('-volume', '--tifVolumePath', type=str, default=None,
+    #                   help='tif path')
+    #
+    # args.add_argument('-threshold', '--threshold', type=str, default=0.5,
+    #                   help='threshold')
+    #
+    # args.add_argument('-pie', '--pie', type=int, default=None,
+    #                   help='show pie chart, integer 1 means True')
+    #
+    # args.add_argument('-width', '--rawWidth', type=int, default=2448,
+    #                   help='width of raw Tif scan')
+    #
+    # args.add_argument('-height', '--rawHeight', type=int, default=2048,
+    #                   help='height of raw tif scan')
+    #
+    # args.add_argument('-step', '--stepThickness', type=float, default=0.005,
+    #                   help='thinkness, step interval')
+    #
+    #
+    # parsed_arg = args.parse_args()
+    # if parsed_arg.tifScanPath:
+    #     predictScan(parsed_arg.tifScanPath, parsed_arg.tifVolumePath)
+    # if parsed_arg.tifVolumePath:
+    #     dataDict = calculateVolume(parsed_arg.tifVolumePath,
+    #                                rawImageShape=(parsed_arg.rawWidth, parsed_arg.rawHeight),
+    #                                thicknessRatio=parsed_arg.stepThickness)
+    #     if parsed_arg.pie == 1:
+    #         dict2Piechart(parsed_arg.tifVolumePath, dataDict)
+    # else:
+    #     predict(threshold=float(parsed_arg.threshold))
+    gui_entrance()

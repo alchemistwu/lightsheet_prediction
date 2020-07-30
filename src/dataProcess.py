@@ -14,7 +14,7 @@ def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True, re
     assert os.path.exists(tifPath)
     imgStack = io.imread(tifPath)
     (steps, height, width) = imgStack.shape
-    print(imgStack.shape)
+    print("Image Stack Size:", imgStack.shape)
     processedStacks = []
     originalStacks = []
     for step in range(steps):
@@ -41,31 +41,40 @@ def readTif(tifPath, keepThreshold=100, imgShape=(608, 608), filterDark=True, re
     else:
         return processedStacks
 
-def saveTifStack(tifStack, saveFolder):
+def saveTifStack(tifStack, saveFolder, startID=None):
     if not os.path.exists(saveFolder):
         os.mkdir(saveFolder)
     assert os.path.isdir(saveFolder)
-    imgID = len(os.listdir(saveFolder))
+    if not startID:
+        imgID = len(os.listdir(saveFolder))
+    else:
+        imgID = startID
     for tif in tifStack:
         cv2.imwrite(os.path.join(saveFolder, str(imgID) + '.png'), tif)
         imgID += 1
 
-def generateImages():
-    tifFolder = os.path.join('..', 'dataset', 'raw')
-    saveFolder = os.path.join('..', 'dataset', 'images')
+def generateImages(tifFolder=None, saveFolder=None, startID=None):
+    if not tifFolder:
+        tifFolder = os.path.join('..', 'dataset', 'raw')
+    if not saveFolder:
+        saveFolder = os.path.join('..', 'dataset', 'images')
+    if not os.path.exists(saveFolder):
+        os.mkdir(saveFolder)
     tifPaths = [os.path.join(tifFolder, file) for file in os.listdir(tifFolder) if file.endswith('.tif')]
     for tifPath in tifPaths:
         tifStack = readTif(tifPath)
+        if startID:
+            saveTifStack(tifStack, saveFolder, startID)
         saveTifStack(tifStack, saveFolder)
 
 
-def generateMasks(imgShape=(608, 608), patient=100):
+def generateMasks(imgFolder=os.path.join('..', 'dataset', 'images'),
+                  jsonFolder=os.path.join('..', 'dataset', 'json'),
+                  labelFolder=os.path.join('..', 'dataset', 'label'),
+                  imgShape=(608, 608), patient=100):
     global LABEL_DICT
     numClass = len(LABEL_DICT.keys())
-    jsonFolder = os.path.join('..', 'dataset', 'json')
     labelDict = loadJson(jsonFolder)
-    imgFolder = os.path.join('..', 'dataset', 'images')
-    labelFolder = os.path.join('..', 'dataset', 'label')
     tmpFolder = os.path.join('..', 'dataset', 'tmp')
     if not os.path.exists(tmpFolder):
         os.mkdir(tmpFolder)
@@ -120,33 +129,20 @@ def loadJson(jsonFolder):
             extractedItems[item['External ID']] = labels
     return extractedItems
 
-def label2Color(labelMask):
+def label2Color(labelMask, background=True, normal=True, stroke=True):
     copyMask = copy.deepcopy(labelMask)
     canvas = np.zeros(shape=(copyMask.shape[0], copyMask.shape[1], 3), dtype='uint8')
-    print(copyMask.shape)
-    for key in LABEL_DICT.keys():
+    keys_to_include = []
+    if background:
+        keys_to_include.append('background')
+    if normal:
+        keys_to_include.append('normal')
+    if stroke:
+        keys_to_include.append('stroke')
+
+    for key in keys_to_include:
         canvas[copyMask[:, :, LABEL_DICT[key]] == 1, :] = COLOR_DICT[key]
     return canvas
-
-def genTxtTrainingSplit(split=0.2):
-    imgFolder = os.path.join('..', 'dataset', 'images')
-    labelFolder = os.path.join('..', 'dataset', 'label')
-    items = list(os.listdir(labelFolder))
-    random.shuffle(items)
-
-    valNum = int(len(items) * split)
-
-    fVal = open(os.path.join('..', 'dataset', 'val.txt'), 'w')
-    fTrain = open(os.path.join('..', 'dataset', 'train.txt'), 'w')
-
-    for index in range(len(items)):
-        if os.path.exists(os.path.join(imgFolder, items[index].replace('.npy', '.png'))):
-            if index < valNum:
-                fVal.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
-            else:
-                fTrain.write(os.path.join(imgFolder, items[index].replace('.npy', '.png')) + "#" + os.path.join(labelFolder, items[index]) + "\n")
-    fVal.close()
-    fTrain.close()
 
 def loadSplitTxt(txtPath):
     assert os.path.exists(txtPath)
@@ -154,6 +150,7 @@ def loadSplitTxt(txtPath):
     labelPaths = []
     with open(txtPath, 'r') as f:
         lines = f.readlines()
+        random.shuffle(lines)
         for line in lines:
             item = line.strip("\n")
             imgPaths.append(item.split('#')[0])
@@ -192,8 +189,6 @@ def data_generator(txtPath, batchSize=1, debug=False, aug=True):
             batchX.append(img)
             batchY.append(label)
 
-            # batchX.append(cv2.imread(imgPath))
-            # batchY.append(np.load(labelPath))
         batchX = np.asarray(batchX, dtype=np.float32)
         batchY = np.asarray(batchY, dtype=np.float32)
         index += 1
@@ -247,16 +242,3 @@ def getAugmentationParameters():
     shiftX = random.randint(-200, 200)
     shiftY = random.randint(-200, 200)
     return rot, flip, shiftX, shiftY
-
-
-
-if __name__ == '__main__':
-
-    # train_txt = os.path.join("..", "dataset", "train.txt")
-    # train_generator = data_generator(train_txt, batchSize=16, debug=True)
-    # with open(train_txt, 'r') as f:
-    #     train_steps = len(f.readlines()) // 16 + 1
-    # for i in range(train_steps):
-    #     next(train_generator)
-    # generateMasks()
-    genTxtTrainingSplit()
