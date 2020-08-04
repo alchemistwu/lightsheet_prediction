@@ -271,19 +271,22 @@ def gui_entrance():
 
             self.textinput_width_ratio = QLineEdit()
             self.textinput_height_ratio = QLineEdit()
+            self.textinput_depth_ratio = QLineEdit()
             self.label_width_ratio = QLabel("Width ratio:")
             self.label_height_ratio = QLabel("Height ratio:")
+            self.label_depth_ratio = QLabel("Depth ratio:")
 
             self.layout_ratio.addWidget(self.label_width_ratio, 0, 0)
             self.layout_ratio.addWidget(self.textinput_width_ratio, 0, 1)
             self.layout_ratio.addWidget(self.label_height_ratio, 0, 2)
             self.layout_ratio.addWidget(self.textinput_height_ratio, 0, 3)
+            self.layout_ratio.addWidget(self.textinput_height_ratio, 0, 4)
 
             self.layout_main.addWidget(self.widget_ratio, 12, 0)
 
-            self.layout_main.addWidget(self.widget_thickness, 13, 0)
+            # self.layout_main.addWidget(self.widget_thickness, 13, 0)
 
-            self.layout_main.addWidget(self.btnRun, 13, 1)
+            self.layout_main.addWidget(self.btnRun, 13, 0)
             self.setCentralWidget(self.widget_main)
 
             self.show()
@@ -325,7 +328,7 @@ def gui_entrance():
                 pass
 
         def analyse(self):
-            thickness = int(str(self.thickness_combo.currentText())) * 0.0001
+            thickness = float(self.textinput_depth_ratio.text()) * 0.001
             consider_list = [btn.text().lower() for btn in
                              [self.radio_label_normal, self.radio_label_background, self.radio_label_stroke]
                              if btn.isChecked()]
