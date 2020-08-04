@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 from PyQt5.QtWidgets import (QMainWindow, QWidget, QPushButton, QLabel,
                              QGridLayout, QComboBox, QRadioButton, QButtonGroup,
-                             QApplication)
+                             QApplication, QLineEdit)
 from tkinter.filedialog import askdirectory, askopenfilename
 from tkinter.messagebox import showwarning, showinfo
 from tkinter import Tk
@@ -203,6 +203,10 @@ def gui_entrance():
             self.layout_thickness = QGridLayout()
             self.widget_thickness.setLayout(self.layout_thickness)
 
+            self.widget_ratio = QWidget()
+            self.layout_ratio = QGridLayout()
+            self.widget_ratio.setLayout(self.layout_ratio)
+
             self.radio_label_background = QRadioButton("Background")
             self.radio_group = QButtonGroup(self.widget_main)
             self.radio_group.setExclusive(False)
@@ -264,9 +268,22 @@ def gui_entrance():
 
             self.layout_thickness.addWidget(self.thickness_label, 0, 0)
             self.layout_thickness.addWidget(self.thickness_combo, 0, 1)
-            self.layout_main.addWidget(self.widget_thickness, 12, 0)
 
-            self.layout_main.addWidget(self.btnRun, 12, 1)
+            self.textinput_width_ratio = QLineEdit()
+            self.textinput_height_ratio = QLineEdit()
+            self.label_width_ratio = QLabel("Width ratio:")
+            self.label_height_ratio = QLabel("Height ratio:")
+
+            self.layout_ratio.addWidget(self.label_width_ratio, 0, 0)
+            self.layout_ratio.addWidget(self.textinput_width_ratio, 0, 1)
+            self.layout_ratio.addWidget(self.label_height_ratio, 0, 2)
+            self.layout_ratio.addWidget(self.textinput_height_ratio, 0, 3)
+
+            self.layout_main.addWidget(self.widget_ratio, 12, 0)
+
+            self.layout_main.addWidget(self.widget_thickness, 13, 0)
+
+            self.layout_main.addWidget(self.btnRun, 13, 1)
             self.setCentralWidget(self.widget_main)
 
             self.show()
@@ -328,6 +345,8 @@ def gui_entrance():
             dataDict = calculateVolume(volume_path, considerList=consider_list,
                                        rawImageShape=(oriHeight, oriWidth),
                                        thicknessRatio=thickness,
+                                       widthRatio=float(self.textinput_width_ratio.text()),
+                                       heightRatio=float(self.textinput_height_ratio.text())
                                        )
             dict2Piechart(volume_path, dataDict, considerList=consider_list)
             showinfo("Finshed!", "Current task %s completed!" % os.path.basename(tif_path))
