@@ -280,7 +280,8 @@ def gui_entrance():
             self.layout_ratio.addWidget(self.textinput_width_ratio, 0, 1)
             self.layout_ratio.addWidget(self.label_height_ratio, 0, 2)
             self.layout_ratio.addWidget(self.textinput_height_ratio, 0, 3)
-            self.layout_ratio.addWidget(self.textinput_height_ratio, 0, 4)
+            self.layout_ratio.addWidget(self.label_depth_ratio, 0, 4)
+            self.layout_ratio.addWidget(self.textinput_depth_ratio, 0, 5)
 
             self.layout_main.addWidget(self.widget_ratio, 12, 0)
 
