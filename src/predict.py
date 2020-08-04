@@ -345,8 +345,8 @@ def gui_entrance():
             dataDict = calculateVolume(volume_path, considerList=consider_list,
                                        rawImageShape=(oriHeight, oriWidth),
                                        thicknessRatio=thickness,
-                                       widthRatio=float(self.textinput_width_ratio.text()),
-                                       heightRatio=float(self.textinput_height_ratio.text())
+                                       widthRatio=float(self.textinput_width_ratio.text()) * 0.001,
+                                       heightRatio=float(self.textinput_height_ratio.text()) * 0.001
                                        )
             dict2Piechart(volume_path, dataDict, considerList=consider_list)
             showinfo("Finshed!", "Current task %s completed!" % os.path.basename(tif_path))
