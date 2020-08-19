@@ -13,15 +13,6 @@ from tkinter.messagebox import showwarning, showinfo
 from tkinter import Tk
 
 
-# try:
-#     from src.model import *
-# except:
-#     pass
-# try:
-#     from src.dataProcess import *
-# except:
-#     pass
-
 def predict(threshold=0.5, batchSize=4):
     weights_folder = os.path.join('..', 'weights')
     if not os.path.exists(weights_folder):
@@ -146,39 +137,6 @@ def dict2Piechart(volumePath, resultDict, considerList):
     plt.tight_layout()
     fig.savefig(imgSavePath, bbox_inches="tight")
 
-# def dict2Piechart(volumePath, resultDict):
-#     fig, ax = plt.subplots(figsize=(6, 3), subplot_kw=dict(aspect="equal"))
-#     keys = [key for key in resultDict.keys() if key != 'background']
-#     data = [resultDict[key] for key in keys]
-#
-#     wedges, texts = ax.pie(data, wedgeprops=dict(width=0.5), startangle=-40)
-#
-#     bbox_props = dict(boxstyle="square,pad=0.3", fc="w", ec="k", lw=0.72)
-#     kw = dict(arrowprops=dict(arrowstyle="-"),
-#               bbox=bbox_props, zorder=0, va="center")
-#
-#     for i, p in enumerate(wedges):
-#         ang = (p.theta2 - p.theta1) / 2. + p.theta1
-#         y = np.sin(np.deg2rad(ang))
-#         x = np.cos(np.deg2rad(ang))
-#         horizontalalignment = {-1: "right", 1: "left"}[int(np.sign(x))]
-#         connectionstyle = "angle,angleA=0,angleB={}".format(ang)
-#         kw["arrowprops"].update({"connectionstyle": connectionstyle})
-#         ax.annotate("%5s: %.2f mm3, %.2f%%" %
-#                     (keys[i], resultDict[keys[i]], 100. * float(resultDict[keys[i]]) / float(sum(data))),
-#                     xy=(x, y), xytext=(1.35 * np.sign(x), 1.1 * y),
-#                     horizontalalignment=horizontalalignment, **kw)
-#
-#
-#     brainId = os.path.basename(volumePath)
-#     # title = ax.set_title("Stroke Volume: %s" % brainId)
-#     title = plt.title("Stroke Volume: %s" % brainId)
-#     figuresPath = os.path.join('..', 'figs')
-#     if not os.path.exists(figuresPath):
-#         os.mkdir(figuresPath)
-#     imgSavePath = os.path.join(figuresPath, brainId + '.png')
-#     plt.tight_layout()
-#     fig.savefig(imgSavePath, bbox_inches="tight")
 
 def gui_entrance():
 
@@ -241,6 +199,9 @@ def gui_entrance():
 
             self.btnRun = QPushButton("Run")
             self.btnRun.clicked.connect(self.analyse)
+            self.btnCal = QPushButton("Calculate Volume")
+            self.btnCal.clicked.connect(self.calVolume)
+
 
             self.thickness_label = QLabel(self)
             self.thickness_label.setText('Section thickness:')
@@ -288,6 +249,8 @@ def gui_entrance():
             # self.layout_main.addWidget(self.widget_thickness, 13, 0)
 
             self.layout_main.addWidget(self.btnRun, 13, 0)
+            self.layout_main.addWidget(self.btnCal, 14, 0)
+
             self.setCentralWidget(self.widget_main)
 
             self.show()
@@ -340,11 +303,18 @@ def gui_entrance():
                 os.mkdir(volume_path)
             oriHeight, oriWidth = predictScan(tif_path, volume_path, consider_list)
 
-            # print(thickness)
-            # print(consider_list)
-            # print(tif_path)
-            # print(volume_path)
-            # print(oriHeight, oriWidth)
+
+        def calVolume(self):
+            thickness = float(self.textinput_depth_ratio.text()) * 0.001
+            consider_list = [btn.text().lower() for btn in
+                             [self.radio_label_normal, self.radio_label_background, self.radio_label_stroke]
+                             if btn.isChecked()]
+            tif_path = self.lineRootDir.text()
+            volume_path = self.lineSaveDir.text()
+            volume_path = os.path.join(volume_path, os.path.basename(tif_path).split('.')[0])
+
+            x, oriX = prepareScanForPredict(tifPath)
+            oriHeight, oriWidth = oriX[0].shape[1], oriX[0].shape[0]
 
             dataDict = calculateVolume(volume_path, considerList=consider_list,
                                        rawImageShape=(oriHeight, oriWidth),
