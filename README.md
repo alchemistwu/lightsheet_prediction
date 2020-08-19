@@ -4,3 +4,4 @@
 *    `conda create --name myenv --file spec-file.txt`
 * 3. To use the spec file to install its listed packages into an existing environment:
 *    `conda install --name myenv --file spec-file.txt`
+* 4. To create your own version of .exe file: use `pyinstaller lspredict.spec` 
