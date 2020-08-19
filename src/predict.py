@@ -313,7 +313,7 @@ def gui_entrance():
             volume_path = self.lineSaveDir.text()
             volume_path = os.path.join(volume_path, os.path.basename(tif_path).split('.')[0])
 
-            x, oriX = prepareScanForPredict(tifPath)
+            x, oriX = prepareScanForPredict(tif_path)
             oriHeight, oriWidth = oriX[0].shape[1], oriX[0].shape[0]
 
             dataDict = calculateVolume(volume_path, considerList=consider_list,
